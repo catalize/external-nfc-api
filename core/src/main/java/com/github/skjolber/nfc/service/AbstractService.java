@@ -512,6 +512,8 @@ public abstract class AbstractService extends Service {
         return false;
     }
 
+    public String currentTagId = "";
+
     protected void mifareClassic(int slotNumber, byte[] atr, TagType tagType, IsoDepWrapper wrapper, ApduTag acsTag) {
         boolean canReadBlocks;
 
@@ -546,7 +548,14 @@ public abstract class AbstractService extends Service {
                     Log.w(TAG, "Unable to read tag UID");
                     uid = new byte[]{MifareClassicTagFactory.NXP_MANUFACTURER_ID};
                 } else {
-                    Log.i(TAG, "Read tag id " + Utils.toHexString(uid));
+                    String tag_id = Utils.toHexString(uid);
+                    Log.i(TAG, "Read tag id " + tag_id);
+                    Log.i(TAG, "REJOICE, TAG ID is Here");
+
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("TagID", tag_id);
+                    editor.apply();
                 }
             } catch (Exception e) {
                 Log.w(TAG, "Problem reading tag UID", e);

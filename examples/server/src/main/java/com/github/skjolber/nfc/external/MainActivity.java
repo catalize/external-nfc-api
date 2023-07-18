@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
 
             String action = intent.getAction();
 
-            Log.d(TAG, "Custom broacast receiver");
+            Log.d(TAG, "Custom broadcast receiver");
 
             setTagPresent(!NfcTag.ACTION_TAG_LEFT_FIELD.equals(action));
         }
@@ -378,6 +378,8 @@ public class MainActivity extends Activity {
         private View rootView;
 
         private Spinner modeSpinner;
+
+        private Spinner kioskSpinner;
 
         public PlaceholderFragment() {
         }
@@ -666,9 +668,13 @@ public class MainActivity extends Activity {
     public void setTagPresent(final boolean present) {
         if (present) {
             setTextViewText(R.id.tagStatus, R.string.tagStatusPresent);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+            String tagId = preferences.getString("TagID","Unreadable");
+            setTextViewText(R.id.text_message, tagId);
         } else {
             setTextViewText(R.id.tagStatus, R.string.tagStatusAbsent);
         }
+
     }
 
     public void setTextViewText(final int resource, final int string) {
