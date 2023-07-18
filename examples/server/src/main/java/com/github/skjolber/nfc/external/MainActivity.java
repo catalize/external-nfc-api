@@ -1,5 +1,7 @@
 package com.github.skjolber.nfc.external;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
@@ -10,8 +12,12 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
+import android.net.Uri;
+import android.nfc.NfcAdapter;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,6 +33,8 @@ import android.widget.ShareActionProvider;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
 import com.github.skjolber.nfc.NfcReader;
 import com.github.skjolber.nfc.NfcService;
 import com.github.skjolber.nfc.NfcTag;
@@ -36,12 +44,17 @@ import com.github.skjolber.nfc.acs.AcrPICC;
 import com.github.skjolber.nfc.acs.AcrReader;
 import com.github.skjolber.nfc.service.BackgroundUsbService;
 import com.github.skjolber.nfc.service.BluetoothBackgroundService;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -78,6 +91,7 @@ public class MainActivity extends Activity {
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction().add(R.id.container, fragment = new PlaceholderFragment()).commit();
         }
+
 
     }
 
@@ -173,8 +187,6 @@ public class MainActivity extends Activity {
             } else {
                 Log.d(TAG, "Ignore action " + action);
             }
-
-
         }
 
     };
@@ -211,6 +223,25 @@ public class MainActivity extends Activity {
         Intent intent = new Intent();
         intent.setClassName("com.github.skjolber.nfc.external", "com.github.skjolber.nfc.service.BackgroundUsbService");
         startService(intent);
+    }
+
+    public void startFirebaseAsService()
+    {
+        Intent intent = new Intent(this, FirestoreUpdaterListener.class); // Build the intent for the service
+        startService(intent);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String packageName = this.getApplicationContext().getPackageName();
+            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                //Intent intent = new Intent();
+                intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+                intent.setData(Uri.parse("package:" + packageName));
+                this.getApplicationContext().startActivity(intent);
+            }
+        }
     }
 
     @Override
@@ -378,8 +409,6 @@ public class MainActivity extends Activity {
         private View rootView;
 
         private Spinner modeSpinner;
-
-        private Spinner kioskSpinner;
 
         public PlaceholderFragment() {
         }
@@ -583,6 +612,8 @@ public class MainActivity extends Activity {
 
             Intent intent = new Intent(this, BackgroundUsbService.class);
             startService(intent);
+
+            startFirebaseAsService();
         }
     }
 
@@ -672,10 +703,28 @@ public class MainActivity extends Activity {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
             String tagId = preferences.getString("TagID","Unreadable");
             setTextViewText(R.id.tagStatus, tagId);
+
+            setRealtimeData(tagId);
         } else {
             setTextViewText(R.id.tagStatus, R.string.tagStatusAbsent);
+
+            setRealtimeData("");
         }
 
+    }
+
+    public void setRealtimeData(String id)
+    {
+        // Get the Kiosk Selection
+        Spinner mySpinner = (Spinner) findViewById(R.id.kiosk_spinner);
+        String kioskId = mySpinner.getSelectedItem().toString();
+
+        Intent intent = new Intent(FirestoreService.ACTION_UPDATE_DATA);
+        intent.putExtra("id", id);
+        intent.putExtra("kioskId", kioskId);
+
+        Log.i("MEONG", "Sending the broadcast!");
+        sendBroadcast(intent);
     }
 
     public void setTextViewText(final int resource, final int string) {

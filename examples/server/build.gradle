@@ -1,3 +1,4 @@
+apply plugin: 'com.google.gms.google-services'
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -8,8 +9,8 @@ android {
 
     defaultConfig {
         applicationId "com.github.skjolber.nfc.external"
-        minSdkVersion 24
-        targetSdkVersion 28
+        minSdkVersion 26
+        targetSdkVersion 29
     }
     buildTypes {
         release {
@@ -26,4 +27,5 @@ dependencies {
     api project(':api')
     api project(':core')
     api project(':tools')
+    implementation 'com.google.firebase:firebase-firestore:21.1.0'
 }
