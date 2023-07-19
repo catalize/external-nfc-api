@@ -25,6 +25,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
+import com.google.type.Date;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +47,13 @@ public class FirestoreUpdaterListener extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Log.d(TAG, "Tag is scanned --" + action);
-            updateRealtimeData(intent.getStringExtra("id"), intent.getStringExtra("kioskId"));
+
+            String tagId = intent.getStringExtra("id");
+            String kioskId = intent.getStringExtra("kioskId");
+            if(tagId != null && !tagId.isEmpty() && !tagId.equals("null"))
+                updateRealtimeData(tagId, kioskId);
+            else
+                ClearTheState(kioskId);
         }
     };
 
@@ -68,11 +75,11 @@ public class FirestoreUpdaterListener extends Service {
         unregisterReceiver(FirestoreReceiver);
     }
 
-    public void updateRealtimeData(String id, String kioskId)
+    public void updateRealtimeData(final String id, final String kioskId)
     {
-        String participant_id = "";
-        // Get data first of the participants who hold this Wristband
-        db.collection("wristbands")
+        if (id != null && !id.isEmpty() && !id.equals("null"))
+        {
+            db.collection("wristbands")
                 .whereEqualTo("sn", id)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -81,18 +88,43 @@ public class FirestoreUpdaterListener extends Service {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Log.d(TAG, document.getId() + " => " + document.getData());
-                                //participant_id = document.getData
-                                //Log.d(TAG,  " => " + document.getData().);
+                                String participant_id = document.getString("participant_id");
+                                Log.i(TAG,  "participant_id => " + participant_id);
+
+                                // Update the state
+                                Map<String, Object> kiosk = new HashMap<>();
+                                kiosk.put("sn", id);
+                                kiosk.put("participant_id", participant_id);
+
+                                db.collection("states").document("jti-conference-" + kioskId)
+                                        .set(kiosk, SetOptions.merge())
+                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                            @Override
+                                            public void onSuccess(Void unused) {
+                                                Log.d(TAG, "Written Successfully");
+                                            }
+                                        })
+                                        .addOnFailureListener(new OnFailureListener() {
+                                            @Override
+                                            public void onFailure(@NonNull Exception e) {
+                                                Log.w(TAG, "Error writing document", e);
+                                            }
+                                        });
                             }
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
                         }
                     }
                 });
+        }
+    }
 
+    public void ClearTheState(String kioskId)
+    {
+        // Update the state
         Map<String, Object> kiosk = new HashMap<>();
-        kiosk.put("sn", id);
-        kiosk.put("participant_id", participant_id);
+        kiosk.put("sn", "");
+        kiosk.put("participant_id", "");
 
         db.collection("states").document("jti-conference-" + kioskId)
                 .set(kiosk, SetOptions.merge())
@@ -115,7 +147,6 @@ public class FirestoreUpdaterListener extends Service {
         public String participant_id;
         public String sn;
         public String url;
-        public Timestamp timestamp;
 
         public Wristband(String id, String sn, String url, String participant_id)
         {

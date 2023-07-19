@@ -653,9 +653,9 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, BackgroundUsbService.class);
             startService(intent);
 
-            startBrowser("https://jti-conference.web.app/diy");
+            //startBrowser("https://jti-conference.web.app/diy");
+            //hideControlPanel();
             startFirebaseAsService();
-            hideControlPanel();
         }
     }
 
@@ -765,7 +765,6 @@ public class MainActivity extends Activity {
         intent.putExtra("id", id);
         intent.putExtra("kioskId", kioskId);
 
-        Log.i("MEONG", "Sending the broadcast!");
         sendBroadcast(intent);
     }
 
