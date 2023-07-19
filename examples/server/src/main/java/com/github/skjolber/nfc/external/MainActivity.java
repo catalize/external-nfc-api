@@ -653,8 +653,14 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, BackgroundUsbService.class);
             startService(intent);
 
-            //startBrowser("https://jti-conference.web.app/diy");
-            //hideControlPanel();
+            Spinner uiSpinner = (Spinner) findViewById(R.id.ui_mode_spinner);
+            String uiSpinnerText = uiSpinner.getSelectedItem().toString();
+            if(uiSpinnerText.equals("Yes"))
+            {
+                startBrowser("https://jti-conference.web.app/diy");
+                hideControlPanel();
+            }
+
             startFirebaseAsService();
         }
     }
