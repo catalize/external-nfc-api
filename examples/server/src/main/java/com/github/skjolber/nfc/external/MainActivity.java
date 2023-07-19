@@ -26,6 +26,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -35,6 +36,8 @@ import android.widget.ShareActionProvider;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+
+import androidx.core.app.ActivityCompat;
 
 import com.github.skjolber.nfc.NfcReader;
 import com.github.skjolber.nfc.NfcService;
@@ -53,9 +56,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import im.delight.android.webview.AdvancedWebView;
-
-
 public class MainActivity extends Activity {
 
     protected static final String PREFERENCE_MODE = "mode";
@@ -64,6 +64,12 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Make Fullscreen
+        getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -226,25 +232,21 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, FirestoreUpdaterListener.class); // Build the intent for the service
         startService(intent);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String packageName = this.getApplicationContext().getPackageName();
-            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
-
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                //Intent intent = new Intent();
-                intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-                intent.setData(Uri.parse("package:" + packageName));
-                this.getApplicationContext().startActivity(intent);
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            String packageName = this.getApplicationContext().getPackageName();
+//            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
+//
+//            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+//                //Intent intent = new Intent();
+//                intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+//                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
+//                intent.setData(Uri.parse("package:" + packageName));
+//                this.getApplicationContext().startActivity(intent);
+//            }
+//        }
     }
 
     public void startBrowser(String uri){
-
-        // Hide the controls
-        final LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controls_layout);
-        controlPanel.setVisibility(View.GONE);
 
         WebView webView = (WebView) findViewById(R.id.webview);
 
@@ -262,6 +264,24 @@ public class MainActivity extends Activity {
         webView.setScrollbarFadingEnabled(false);
 
         webView.loadUrl(uri);
+
+
+    }
+
+    public void hideControlPanel()
+    {
+        // Hide the controls
+        final LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controls_layout);
+        controlPanel.setVisibility(View.GONE);
+
+        View decorView = getWindow().getDecorView();
+        // Hide both the navigation bar and the status bar.
+        // SYSTEM_UI_FLAG_FULLSCREEN is only available on Android 4.1 and higher, but as
+        // a general rule, you should design your app to hide the status bar whenever you
+        // hide the navigation bar.
+        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
     }
 
     @Override
@@ -634,7 +654,8 @@ public class MainActivity extends Activity {
             startService(intent);
 
             startBrowser("https://jti-conference.web.app/diy");
-            //startFirebaseAsService();
+            startFirebaseAsService();
+            hideControlPanel();
         }
     }
 
