@@ -59,7 +59,6 @@ public class FirestoreUpdaterListener extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         unregisterReceiver(FirestoreReceiver);
     }
 

@@ -28,4 +28,5 @@ dependencies {
     api project(':core')
     api project(':tools')
     implementation 'com.google.firebase:firebase-firestore:21.1.0'
+    implementation 'com.github.delight-im:Android-AdvancedWebView:v3.2.1'
 }

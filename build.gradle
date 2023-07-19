@@ -70,4 +70,8 @@ allprojects {
             testOutputDir file('build/classes/test')
         }
     }
+
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
 }

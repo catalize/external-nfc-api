@@ -12,8 +12,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.net.Uri;
-import android.nfc.NfcAdapter;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,14 +26,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ShareActionProvider;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 
 import com.github.skjolber.nfc.NfcReader;
 import com.github.skjolber.nfc.NfcService;
@@ -44,18 +45,15 @@ import com.github.skjolber.nfc.acs.AcrPICC;
 import com.github.skjolber.nfc.acs.AcrReader;
 import com.github.skjolber.nfc.service.BackgroundUsbService;
 import com.github.skjolber.nfc.service.BluetoothBackgroundService;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+
+import im.delight.android.webview.AdvancedWebView;
 
 
 public class MainActivity extends Activity {
@@ -91,8 +89,6 @@ public class MainActivity extends Activity {
         if (savedInstanceState == null) {
             getFragmentManager().beginTransaction().add(R.id.container, fragment = new PlaceholderFragment()).commit();
         }
-
-
     }
 
     private static final String TAG = MainActivity.class.getName();
@@ -242,6 +238,30 @@ public class MainActivity extends Activity {
                 this.getApplicationContext().startActivity(intent);
             }
         }
+    }
+
+    public void startBrowser(String uri){
+
+        // Hide the controls
+        final LinearLayout controlPanel = (LinearLayout) findViewById(R.id.controls_layout);
+        controlPanel.setVisibility(View.GONE);
+
+        WebView webView = (WebView) findViewById(R.id.webview);
+
+        webView.getSettings().setLoadsImagesAutomatically(true);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setLoadWithOverviewMode(true);
+        webView.getSettings().setUseWideViewPort(true);
+
+        webView.getSettings().setSupportZoom(true);
+        webView.getSettings().setBuiltInZoomControls(true);
+        webView.getSettings().setDisplayZoomControls(false);
+
+        webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        webView.setScrollbarFadingEnabled(false);
+
+        webView.loadUrl(uri);
     }
 
     @Override
@@ -613,7 +633,8 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, BackgroundUsbService.class);
             startService(intent);
 
-            startFirebaseAsService();
+            startBrowser("https://jti-conference.web.app/diy");
+            //startFirebaseAsService();
         }
     }
 
