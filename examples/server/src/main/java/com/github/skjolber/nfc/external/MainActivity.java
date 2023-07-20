@@ -1,5 +1,6 @@
 package com.github.skjolber.nfc.external;
 
+import static android.app.PendingIntent.getActivity;
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 import android.annotation.SuppressLint;
@@ -27,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -53,13 +55,17 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class MainActivity extends Activity {
 
     protected static final String PREFERENCE_MODE = "mode";
     protected static final String PREFERENCE_BLUETOOTH_RESULTS = "bluetoothResults";
+
+    public WebView webView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -231,24 +237,38 @@ public class MainActivity extends Activity {
     {
         Intent intent = new Intent(this, FirestoreUpdaterListener.class); // Build the intent for the service
         startService(intent);
+    }
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            String packageName = this.getApplicationContext().getPackageName();
-//            PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
-//
-//            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-//                //Intent intent = new Intent();
-//                intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-//                intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
-//                intent.setData(Uri.parse("package:" + packageName));
-//                this.getApplicationContext().startActivity(intent);
-//            }
-//        }
+    public class WebAppInterface {
+        Context mContext;
+        String data;
+
+        WebAppInterface(Context ctx){
+            this.mContext=ctx;
+        }
+
+
+        @JavascriptInterface
+        public void sendData(String data) {
+            //Get the string value to process
+            this.data=data;
+        }
+
+        @JavascriptInterface
+        public void reloadWebView() {
+            Log.i("MEONGERS", "I am reloaded!!!");
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.reload();
+                }
+            });
+        }
     }
 
     public void startBrowser(String uri){
 
-        WebView webView = (WebView) findViewById(R.id.webview);
+        webView = (WebView) findViewById(R.id.webview);
 
         webView.getSettings().setLoadsImagesAutomatically(true);
         webView.getSettings().setDomStorageEnabled(true);
@@ -263,9 +283,11 @@ public class MainActivity extends Activity {
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
 
+        webView.addJavascriptInterface(new WebAppInterface(this), "Android");
+
+        //Map<String, String> extraHeaders = new HashMap<String, String>();
+        //extraHeaders.put("ngrok-skip-browser-warning", "true");
         webView.loadUrl(uri);
-
-
     }
 
     public void hideControlPanel()
@@ -655,9 +677,21 @@ public class MainActivity extends Activity {
 
             Spinner uiSpinner = (Spinner) findViewById(R.id.ui_mode_spinner);
             String uiSpinnerText = uiSpinner.getSelectedItem().toString();
+
             if(uiSpinnerText.equals("Yes"))
             {
-                startBrowser("https://jti-conference.web.app/diy");
+                String kioskSpinnerText = ((Spinner) findViewById(R.id.kiosk_spinner)).getSelectedItem().toString();
+                String kioskId = kioskSpinnerText.substring(kioskSpinnerText.lastIndexOf('-') + 1);
+
+                String url = "";
+                if(((Spinner) findViewById(R.id.env_spinner)).getSelectedItem().toString().equals("Local")) {
+                    url = "https://jti-conference.ngrok.app/diy/" + kioskId;
+                }
+                else {
+                    url = "https://jti-conference.web.app/diy/" + kioskId;
+                }
+
+                startBrowser(url);
                 hideControlPanel();
             }
 

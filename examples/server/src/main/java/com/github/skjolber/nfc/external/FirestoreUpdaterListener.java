@@ -77,8 +77,10 @@ public class FirestoreUpdaterListener extends Service {
 
     public void updateRealtimeData(final String id, final String kioskId)
     {
+        Log.d(TAG, "Let's Update");
         if (id != null && !id.isEmpty() && !id.equals("null"))
         {
+            Log.d(TAG, "Let's Insert");
             db.collection("wristbands")
                 .whereEqualTo("sn", id)
                 .get()
@@ -121,6 +123,7 @@ public class FirestoreUpdaterListener extends Service {
 
     public void ClearTheState(String kioskId)
     {
+        Log.d(TAG, "Let's Clear");
         // Update the state
         Map<String, Object> kiosk = new HashMap<>();
         kiosk.put("sn", "");
