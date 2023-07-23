@@ -279,6 +279,8 @@ public class MainActivity extends Activity {
         webView.getSettings().setSupportZoom(true);
         webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setDisplayZoomControls(false);
+        webView.getSettings().setUserAgentString("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1");
+
 
         webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
         webView.setScrollbarFadingEnabled(false);
@@ -672,29 +674,35 @@ public class MainActivity extends Activity {
         } else {
             Log.d(TAG, "Start reader service");
 
-            Intent intent = new Intent(this, BackgroundUsbService.class);
-            startService(intent);
-
             Spinner uiSpinner = (Spinner) findViewById(R.id.ui_mode_spinner);
             String uiSpinnerText = uiSpinner.getSelectedItem().toString();
 
-            if(uiSpinnerText.equals("Yes"))
-            {
-                String kioskSpinnerText = ((Spinner) findViewById(R.id.kiosk_spinner)).getSelectedItem().toString();
-                String kioskId = kioskSpinnerText.substring(kioskSpinnerText.lastIndexOf('-') + 1);
+            String kioskSpinnerText = ((Spinner) findViewById(R.id.kiosk_spinner)).getSelectedItem().toString();
+            String kioskId = kioskSpinnerText.substring(kioskSpinnerText.lastIndexOf('-') + 1);
 
-                String url = "";
-                if(((Spinner) findViewById(R.id.env_spinner)).getSelectedItem().toString().equals("Local")) {
-                    url = "https://jti-conference.ngrok.app/diy/" + kioskId;
-                }
-                else {
-                    url = "https://jti-conference.web.app/diy/" + kioskId;
-                }
-
-                startBrowser(url);
-                hideControlPanel();
+            String url = "";
+            if(((Spinner) findViewById(R.id.env_spinner)).getSelectedItem().toString().equals("Local")) {
+                url = "https://jti-conference.ngrok.app/diy/" + kioskId;
+            }
+            else {
+                url = "https://jti-conference.web.app/diy/" + kioskId;
             }
 
+            switch (uiSpinnerText)
+            {
+                case "Server-and-UI":
+                    startBrowser(url);
+                    hideControlPanel();
+                case "Server-Only":
+                    Intent intent = new Intent(this, BackgroundUsbService.class);
+                    startService(intent);
+                    break;
+                case "UI-Only":
+                    startBrowser(url);
+                    hideControlPanel();
+                    break;
+
+            }
             startFirebaseAsService();
         }
     }

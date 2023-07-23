@@ -2,8 +2,9 @@
 <resources>
 
     <string-array name="kiosk_ui">
-        <item>No</item>
-        <item>Yes</item>
+        <item>Server-Only</item>
+        <item>UI-Only</item>
+        <item>Server-and-UI</item>
     </string-array>
 
 </resources>

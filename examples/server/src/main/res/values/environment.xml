@@ -2,7 +2,7 @@
 <resources>
 
     <string-array name="dev_environment">
-        <item>Local</item>
         <item>Global</item>
+        <item>Local</item>
     </string-array>
 </resources>
